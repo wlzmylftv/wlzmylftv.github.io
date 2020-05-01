@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Ubuntu-搭建Samba服务 - 灾难总是接踵而至</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	
+	
+	<link rel="dns-prefetch" href="//fonts.googleapis.com">
+	<link rel="dns-prefetch" href="//fonts.gstatic.com">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700">
+	<link rel="stylesheet" href="/css/style.css">
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+		
+</head>
+<body class="body">
+	<div class="container container--outer">
+		<header class="header">
+	<div class="container">
+		<div class="logo">
+			<a class="logo__link" href="https://mls.toh.info/" title="灾难总是接踵而至" rel="home">
+				<div class="logo__title">灾难总是接踵而至</div>
+				<div class="logo__tagline">&#34;受尽苦难而不厌，此乃修罗之道。&#34;</div>
+			</a>
+		</div>
+		
+<nav class="menu">
+	<button class="menu__btn" aria-haspopup="true" aria-expanded="false" tabindex="0">
+		<span class="menu__btn-title" tabindex="-1">Menu</span>
+	</button>
+	<ul class="menu__list">
+		<li class="menu__item">
+			<a class="menu__link" href="/archives/">
+				
+				<span class="menu__text">归档</span>
+				
+			</a>
+		</li>
+		<li class="menu__item">
+			<a class="menu__link" href="/about/">
+				
+				<span class="menu__text">关于</span>
+				
+			</a>
+		</li>
+	</ul>
+</nav>
+
+	</div>
+</header>
+		<div class="wrapper flex">
+			<div class="primary">
+			
+<main class="main" role="main">
+	<article class="post">
+		<header class="post__header">
+			<h1 class="post__title">Ubuntu-搭建Samba服务</h1>
+			
+		</header>
+<div class="post__toc toc">
+	<div class="toc__title">Page content</div>
+	<div class="toc__menu">
+		<nav id="TableOfContents">
+  <ul>
+    <li><a href="#安装-samba-服务端">安装 Samba 服务端</a></li>
+    <li><a href="#配置-samba-文件">配置 Samba 文件</a>
+      <ul>
+        <li><a href="#设置匿名共享目录">设置匿名共享目录</a></li>
+        <li><a href="#设置用户认证">设置用户认证</a></li>
+      </ul>
+    </li>
+    <li><a href="#检测-smb-配置是否有误">检测 smb 配置是否有误</a></li>
+    <li><a href="#扩展">扩展</a></li>
+  </ul>
+</nav>
+	</div>
+</div>
+<div class="content post__content clearfix">
+			<p>Ubuntu-搭建Samba服务!</p>
+<h2 id="安装-samba-服务端">安装 Samba 服务端</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 更新源</span>
+apt update
+<span style="color:#75715e"># 安装 Samba</span> 
+apt install -y samba samba-common
+</code></pre></div><h2 id="配置-samba-文件">配置 Samba 文件</h2>
+<ul>
+<li>准备工作</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 编辑 /etc/vsftpd.conf 文件前，先将默认文件备份</span>
+cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
+cat /dev/null &gt; /etc/samba/smb.conf
+<span style="color:#75715e"># 创建 Samba 共享目录</span>
+mkdir -p /samba/<span style="color:#f92672">{</span>public,smbgrp<span style="color:#f92672">}</span>
+<span style="color:#75715e"># 创建 Samba 用户组</span>
+addgroup smbgrp
+<span style="color:#75715e"># 创建 Samba 用户组的用户 ty</span>
+useradd wlz -G smbgrp
+<span style="color:#75715e"># 设置 ty 用户的smb密码</span>
+smbpasswd -a wlz
+<span style="color:#75715e">## useradd -g smbgrp -M -s /sbin/nologin lz</span>
+<span style="color:#75715e"># 配置全局变量</span>
+vim /etc/samba/smb.conf
+---
+<span style="color:#f92672">[</span>global<span style="color:#f92672">]</span>
+workgroup <span style="color:#f92672">=</span> WORKGROUP			<span style="color:#75715e"># 全局工作组</span>
+server string <span style="color:#f92672">=</span> smbgrp Samba Server			<span style="color:#75715e"># samba服务端描述</span>
+netbios name <span style="color:#f92672">=</span> ubuntu
+log file <span style="color:#f92672">=</span> /var/log/samba/log.%m			<span style="color:#75715e"># 开启smaba日志</span>
+max log size <span style="color:#f92672">=</span> 1000			<span style="color:#75715e"># 设置smaba日志最大值</span>
+security <span style="color:#f92672">=</span> user			<span style="color:#75715e"># 安全模式为用户认证模式，还有一种模式为 share，共享模式</span>
+dns proxy <span style="color:#f92672">=</span> no
+passdb backend <span style="color:#f92672">=</span> smbpasswd			<span style="color:#75715e"># 保存smb密码</span>
+smb passwd file <span style="color:#f92672">=</span> /etc/samba/smbpasswd			<span style="color:#75715e"># 保存smb密码存放路径</span>
+---
+</code></pre></div><h3 id="设置匿名共享目录">设置匿名共享目录</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 设置匿名共享目录权限</span>
+chmod -R <span style="color:#ae81ff">0775</span> /samba/public
+chown -R nobody:nogroup /samba/public
+<span style="color:#75715e"># 添加smb配置内容</span>
+vim /etc/samba/smb.conf
+---
+<span style="color:#f92672">[</span>global<span style="color:#f92672">]</span>
+workgroup <span style="color:#f92672">=</span> WORKGROUP			<span style="color:#75715e"># 全局工作组</span>
+server string <span style="color:#f92672">=</span> smbgrp Samba Server			<span style="color:#75715e"># samba服务端描述</span>
+netbios name <span style="color:#f92672">=</span> ubuntu
+log file <span style="color:#f92672">=</span> /var/log/samba/log.%m			<span style="color:#75715e"># 开启smaba日志</span>
+max log size <span style="color:#f92672">=</span> 1000			<span style="color:#75715e"># 设置smaba日志最大值</span>
+security <span style="color:#f92672">=</span> user			<span style="color:#75715e"># 安全模式为用户认证模式，还有一种模式为 share，共享模式</span>
+dns proxy <span style="color:#f92672">=</span> no
+passdb backend <span style="color:#f92672">=</span> smbpasswd			<span style="color:#75715e"># 保存smb密码</span>
+smb passwd file <span style="color:#f92672">=</span> /etc/samba/smbpasswd			<span style="color:#75715e"># 保存smb密码存放路径</span>
+
+<span style="color:#f92672">[</span>public<span style="color:#f92672">]</span>
+comment <span style="color:#f92672">=</span> share file			共享文件夹注释
+path <span style="color:#f92672">=</span> /samba/pubilc			共享文件夹路径
+browsable <span style="color:#f92672">=</span> yes			允许浏览
+writable <span style="color:#f92672">=</span> yes			可写
+guest ok <span style="color:#f92672">=</span> yes
+read only <span style="color:#f92672">=</span> no			可读写
+force user <span style="color:#f92672">=</span> nobody			认证模式为nobody，即无需认证
+---
+<span style="color:#75715e"># 重启服务</span>
+service smbd restart
+</code></pre></div><h3 id="设置用户认证">设置用户认证</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 设置认证目录权限</span>
+chmod -R <span style="color:#ae81ff">0770</span> /samba/smbgrp
+chown -R root:smbgrp /samba/smbgrp
+<span style="color:#75715e"># 添加smb配置内容</span>
+vim /etc/samba/smb.conf
+---
+<span style="color:#f92672">[</span>global<span style="color:#f92672">]</span>
+workgroup <span style="color:#f92672">=</span> WORKGROUP			<span style="color:#75715e"># 全局工作组</span>
+server string <span style="color:#f92672">=</span> smbgrp Samba Server			<span style="color:#75715e"># samba服务端描述</span>
+netbios name <span style="color:#f92672">=</span> ubuntu
+log file <span style="color:#f92672">=</span> /var/log/samba/log.%m			<span style="color:#75715e"># 开启smaba日志</span>
+max log size <span style="color:#f92672">=</span> 1000			<span style="color:#75715e"># 设置smaba日志最大值</span>
+security <span style="color:#f92672">=</span> user			<span style="color:#75715e"># 安全模式为用户认证模式，还有一种模式为 share，共享模式</span>
+dns proxy <span style="color:#f92672">=</span> no
+passdb backend <span style="color:#f92672">=</span> smbpasswd			<span style="color:#75715e"># 保存smb密码</span>
+smb passwd file <span style="color:#f92672">=</span> /etc/samba/smbpasswd			<span style="color:#75715e"># 保存smb密码存放路径</span>
+
+<span style="color:#f92672">[</span>public<span style="color:#f92672">]</span>
+comment <span style="color:#f92672">=</span> share file			<span style="color:#75715e"># 文件夹注释</span>
+path <span style="color:#f92672">=</span> /samba/public			<span style="color:#75715e"># 文件夹路径</span>
+browsable <span style="color:#f92672">=</span> yes			<span style="color:#75715e"># 允许浏览</span>
+writable <span style="color:#f92672">=</span> yes			<span style="color:#75715e"># 可写</span>
+guest ok <span style="color:#f92672">=</span> yes
+read only <span style="color:#f92672">=</span> no			<span style="color:#75715e"># 可读写</span>
+force user <span style="color:#f92672">=</span> nobody			<span style="color:#75715e"># 认证模式为nobody，即无需认证</span>
+
+<span style="color:#f92672">[</span>smbgrp<span style="color:#f92672">]</span>
+comment <span style="color:#f92672">=</span> One Piece			<span style="color:#75715e"># 文件夹注释</span>
+path <span style="color:#f92672">=</span> /samba/smbgrp			<span style="color:#75715e"># 文件夹路径</span>
+valid users <span style="color:#f92672">=</span> @smbgrp			<span style="color:#75715e"># 可以访问的用户，@smbgrp组，则属于这个组内的所有用户都可以访问，也可以是用 ，分隔用户如：valid users = user01,user02</span>
+guest ok <span style="color:#f92672">=</span> no
+writable <span style="color:#f92672">=</span> yes			<span style="color:#75715e"># 可写</span>
+browsable <span style="color:#f92672">=</span> no			<span style="color:#75715e"># 不允许浏览，需要访问必须输入绝对路径访问</span>
+---
+<span style="color:#75715e"># 重启服务</span>
+service smbd restart
+</code></pre></div><h2 id="检测-smb-配置是否有误">检测 smb 配置是否有误</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">testparm
+</code></pre></div><h2 id="扩展">扩展</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 若是有打印机自动连接</span>
+<span style="color:#f92672">[</span>printers<span style="color:#f92672">]</span>
+comment <span style="color:#f92672">=</span> All Printers
+browseable <span style="color:#f92672">=</span> no
+path <span style="color:#f92672">=</span> /var/spool/samba
+printable <span style="color:#f92672">=</span> yes
+guest ok <span style="color:#f92672">=</span> no
+read only <span style="color:#f92672">=</span> yes
+create mask <span style="color:#f92672">=</span> <span style="color:#ae81ff">0700</span>
+
+<span style="color:#75715e">## 设置匿名访问</span>
+public <span style="color:#f92672">=</span> yes	<span style="color:#75715e"># 允许匿名</span>
+public <span style="color:#f92672">=</span> no		<span style="color:#75715e"># 不允许匿名</span>
+
+<span style="color:#75715e">## 设置访问用户</span>
+valid users <span style="color:#f92672">=</span> 用户名
+valid users <span style="color:#f92672">=</span> @组名
+
+<span style="color:#75715e">## 设置目录只读</span>
+readonly <span style="color:#f92672">=</span> yes		<span style="color:#75715e"># 只读</span>
+readonly <span style="color:#f92672">=</span> no		<span style="color:#75715e"># 读写</span>
+
+<span style="color:#75715e">## 设置目录可写</span>
+writable 格式：
+writable <span style="color:#f92672">=</span> yes		<span style="color:#75715e"># 读写</span>
+writable <span style="color:#f92672">=</span> no		<span style="color:#75715e"># 只读</span>
+write list 格式：		<span style="color:#75715e"># 可限制个别用户不能写入</span>
+write list <span style="color:#f92672">=</span> 用户名
+write list <span style="color:#f92672">=</span> @组名
+</code></pre></div>
+		</div>
+		<footer class="post__footer">
+			
+<div class="post__tags tags clearfix">
+	<svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5 0 11V3C0 1.5.8.8.8.8S1.5 0 3 0h8c1.5 0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+	<ul class="tags__list">
+		<li class="tags__item">
+			<a class="tags__link btn" href="/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a>
+		</li>
+		<li class="tags__item">
+			<a class="tags__link btn" href="/tags/VPS/" rel="tag">VPS</a>
+		</li>
+	</ul>
+</div>
+		</footer>
+	</article>
+</main>
+
+
+
+
+
+			</div>
+			
+		</div>
+		<footer class="footer">
+	<div class="container footer__container flex">
+		
+		<div class="footer__copyright">
+			&copy; 2020 灾难总是接踵而至.
+			
+			<a href="https://mls.toh.info/">索某人</a>
+		</div>
+	</div>
+</footer>
+	</div>
+<script async defer src="/js/menu.js"></script>
+</body>
+</html>

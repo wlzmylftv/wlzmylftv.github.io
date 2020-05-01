@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Ubuntu安装Nginx - 灾难总是接踵而至</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	
+	
+	<link rel="dns-prefetch" href="//fonts.googleapis.com">
+	<link rel="dns-prefetch" href="//fonts.gstatic.com">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700">
+	<link rel="stylesheet" href="/css/style.css">
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+		
+</head>
+<body class="body">
+	<div class="container container--outer">
+		<header class="header">
+	<div class="container">
+		<div class="logo">
+			<a class="logo__link" href="https://mls.toh.info/" title="灾难总是接踵而至" rel="home">
+				<div class="logo__title">灾难总是接踵而至</div>
+				<div class="logo__tagline">&#34;受尽苦难而不厌，此乃修罗之道。&#34;</div>
+			</a>
+		</div>
+		
+<nav class="menu">
+	<button class="menu__btn" aria-haspopup="true" aria-expanded="false" tabindex="0">
+		<span class="menu__btn-title" tabindex="-1">Menu</span>
+	</button>
+	<ul class="menu__list">
+		<li class="menu__item">
+			<a class="menu__link" href="/archives/">
+				
+				<span class="menu__text">归档</span>
+				
+			</a>
+		</li>
+		<li class="menu__item">
+			<a class="menu__link" href="/about/">
+				
+				<span class="menu__text">关于</span>
+				
+			</a>
+		</li>
+	</ul>
+</nav>
+
+	</div>
+</header>
+		<div class="wrapper flex">
+			<div class="primary">
+			
+<main class="main" role="main">
+	<article class="post">
+		<header class="post__header">
+			<h1 class="post__title">Ubuntu安装Nginx</h1>
+			
+		</header>
+<div class="post__toc toc">
+	<div class="toc__title">Page content</div>
+	<div class="toc__menu">
+		<nav id="TableOfContents">
+  <ul>
+    <li><a href="#步骤1安装nginx">步骤1：安装Nginx</a></li>
+    <li><a href="#步骤2检查您的web服务器">步骤2：检查您的Web服务器</a></li>
+    <li><a href="#步骤3管理nginx流程">步骤3：管理Nginx流程</a></li>
+    <li><a href="#步骤4熟悉重要的nginx文件和目录">步骤4：熟悉重要的Nginx文件和目录</a></li>
+  </ul>
+</nav>
+	</div>
+</div>
+<div class="content post__content clearfix">
+			<h2 id="步骤1安装nginx">步骤1：安装Nginx</h2>
+<p>Nginx在Ubuntu的默认存储库中可用，因此安装非常简单。</p>
+<p>由于这是我们apt在本次会议中与包装系统的首次互动，因此我们将更新本地包装索引，以便可以访问最新的包装清单。
+之后，我们可以安装nginx：</p>
+<pre><code>sudo apt-get update
+sudo apt-get install nginx
+</code></pre><h2 id="步骤2检查您的web服务器">步骤2：检查您的Web服务器</h2>
+<p>在安装过程结束时，Ubuntu 16.04将启动Nginx。Web服务器应该已经启动并正在运行。</p>
+<p>我们可以systemd通过输入以下内容来检查init系统，以确保服务正在运行：</p>
+<pre><code>systemctl status nginx
+Output
+● nginx.service - A high performance web server and a reverse proxy server
+   Loaded: loaded (/lib/systemd/system/nginx.service; enabled; vendor preset: enabled)
+   Active: active (running) since Mon 2016-04-18 16:14:00 EDT; 4min 2s ago
+ Main PID: 12857 (nginx)
+   CGroup: /system.slice/nginx.service
+           ├─12857 nginx: master process /usr/sbin/nginx -g daemon on; master_process on
+           └─12858 nginx: worker process
+
+</code></pre><p>如上所示，该服务似乎已成功启动。但是，测试此问题的最佳方法是实际从Nginx请求一个页面。
+您可以访问默认的Nginx登录页面，以确认该软件运行正常。您可以通过服务器的域名或IP地址来访问它。
+如果不想为服务器设置域名，则可以使用服务器的公共IP地址。如果您不知道服务器的IP地址，则可以从命令行以几种不同的方式获取它。
+尝试在服务器的命令提示符下键入以下内容：</p>
+<pre><code>ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'
+</code></pre><p>您将返回几行。您可以尝试在网络浏览器中查看它们是否正常工作。
+一种替代方法是键入此内容，它应该为您提供公共IP地址，如从Internet上的其他位置看到的那样：</p>
+<pre><code>sudo apt-get install curl
+curl -4 icanhazip.com
+</code></pre><p>当您拥有服务器的IP地址或域时，将其输入到浏览器的地址栏中：</p>
+<pre><code>http://server_domain_or_IP
+</code></pre><h2 id="步骤3管理nginx流程">步骤3：管理Nginx流程</h2>
+<p>现在您已启动并运行了Web服务器，接下来我们将介绍一些基本的管理命令。</p>
+<p>要停止您的Web服务器，您可以输入：</p>
+<pre><code>sudo systemctl stop nginx
+</code></pre><p>要在停止时启动Web服务器，请键入：</p>
+<pre><code>sudo systemctl start nginx
+</code></pre><p>要停止然后再次启动该服务，请键入：</p>
+<pre><code>sudo systemctl restart nginx
+</code></pre><p>如果您只是在更改配置，Nginx通常可以在不断开连接的情况下重新加载。为此，可以使用以下命令：</p>
+<pre><code>sudo systemctl reload nginx
+</code></pre><p>默认情况下，Nginx配置为在服务器启动时自动启动。如果这不是您想要的，则可以通过键入以下内容来禁用此行为：</p>
+<pre><code>sudo systemctl disable nginx
+</code></pre><p>要重新启用该服务以在引导时启动，您可以键入：</p>
+<pre><code>sudo systemctl enable nginx
+</code></pre><h2 id="步骤4熟悉重要的nginx文件和目录">步骤4：熟悉重要的Nginx文件和目录</h2>
+<p>现在您知道了如何管理服务本身，您应该花一些时间来熟悉一些重要的目录和文件。</p>
+<ul>
+<li>内容</li>
+</ul>
+<pre><code>/var/www/html：实际的Web内容（默认情况下仅由您之前看到的默认Nginx页面组成）从/var/www/html目录中提供。这可以通过更改Nginx配置文件来更改。
+</code></pre><ul>
+<li>服务器配置</li>
+</ul>
+<pre><code>/etc/nginx：Nginx配置目录。所有Nginx配置文件都位于此处。
+/etc/nginx/nginx.conf：主要的Nginx配置文件。可以对其进行修改以更改Nginx全局配置。
+/etc/nginx/sites-available/：可以存储每个站点“服务器阻止”的目录。Nginx不会使用在此目录中找到的配置文件，除非它们链接到该sites-enabled目录（请参见下文）。通常，所有服务器块配置都在此目录中完成，然后通过链接到其他目录来启用。
+/etc/nginx/sites-enabled/：存储已启用的每个站点“服务器块”的目录。通常，通过链接到sites-available目录中的配置文件来创建这些文件。
+/etc/nginx/snippets：此目录包含一些配置片段，这些片段可以包含在Nginx配置中的其他位置。潜在的可重复配置段是重构为代码段的良好候选者。
+</code></pre><ul>
+<li>服务器日志</li>
+</ul>
+<pre><code>/var/log/nginx/access.log：除非将Nginx配置为执行其他操作，否则对Web服务器的每个请求都记录在此日志文件中。
+/var/log/nginx/error.log：任何Nginx错误都将记录在此日志中。
+</code></pre>
+		</div>
+		<footer class="post__footer">
+			
+<div class="post__tags tags clearfix">
+	<svg class="tags__badge icon icon-tag" width="16" height="16" viewBox="0 0 32 32"><path d="M32 19c0 1-1 2-1 2L21 31s-1 1-2 1-2-1-2-1L2 16c-1-1-1.4-2-1.4-2S0 12.5 0 11V3C0 1.5.8.8.8.8S1.5 0 3 0h8c1.5 0 3 .6 3 .6S15 1 16 2l15 15s1 1 1 2zM7 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg>
+	<ul class="tags__list">
+		<li class="tags__item">
+			<a class="tags__link btn" href="/tags/%E6%95%99%E7%A8%8B/" rel="tag">教程</a>
+		</li>
+		<li class="tags__item">
+			<a class="tags__link btn" href="/tags/VPS/" rel="tag">VPS</a>
+		</li>
+	</ul>
+</div>
+		</footer>
+	</article>
+</main>
+
+
+
+
+
+			</div>
+			
+		</div>
+		<footer class="footer">
+	<div class="container footer__container flex">
+		
+		<div class="footer__copyright">
+			&copy; 2020 灾难总是接踵而至.
+			
+			<a href="https://mls.toh.info/">索某人</a>
+		</div>
+	</div>
+</footer>
+	</div>
+<script async defer src="/js/menu.js"></script>
+</body>
+</html>
